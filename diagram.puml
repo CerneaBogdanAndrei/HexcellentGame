@@ -1,0 +1,166 @@
+@startuml
+title Hexcellent - Diagrama de clase (componente principale)
+
+scale 0.40
+skinparam dpi 110
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam padding 2
+skinparam nodesep 12
+skinparam ranksep 18
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+package "main" {
+  class HexaSortGame {
+    +HexaSortGame()
+    +getFacade(): GameFacade
+    +main(args: String[]): void
+  }
+}
+
+package "ui" {
+  class GameFacade {
+    +GameFacade(l: CardLayout, c: JPanel, gp: GamePanel)
+    +startEndless(): void
+    +startLevel(level: int): void
+    +restartCurrent(): void
+    +nextLevel(): void
+    +showMenu(): void
+  }
+
+  class MenuPanel {
+    +MenuPanel(frame: HexaSortGame)
+  }
+
+  class GamePanel {
+    +GamePanel(frame: HexaSortGame)
+    +resetAnimations(): void
+    +onGameStateChanged(): void
+    +onLevelWon(): void
+    +onGameOver(): void
+  }
+}
+
+package "logic" {
+  class GameManager {
+    -instance: GameManager
+    -observers: List<GameObserver>
+    +grid: Map
+    +hand: List
+    +score: int
+    +highScore: int
+    +currentLevel: int
+    +currentMode: GameMode
+    +levelTargetScore: int
+    +hintCount: int
+    +bombCount: int
+    -scoringStrategy: ScoringStrategy
+    -GameManager()
+    +getInstance(): GameManager
+    +addObserver(o: GameObserver): void
+    +initGame(mode: GameMode, level: int): void
+    +addScore(tilesRemoved: int): void
+    +useHint(): void
+    +useBomb(): void
+    +refillHand(): void
+    +checkRefill(): void
+    +checkGameOver(): void
+    +notifyUpdate(): void
+  }
+
+  interface GameObserver {
+    +onGameStateChanged(): void
+    +onLevelWon(): void
+    +onGameOver(): void
+  }
+
+  class TileFactory {
+    +createRandomStack(): Stack
+  }
+}
+
+package "logic.strategies" {
+  interface ScoringStrategy {
+    +calculateScore(tilesCleared: int): int
+  }
+
+  class StandardScoring {
+    +calculateScore(tilesCleared: int): int
+  }
+
+  class ComboScoring {
+    +calculateScore(tilesCleared: int): int
+  }
+}
+
+package "model" {
+  class Hex {
+    +q: int
+    +r: int
+    +Hex(q: int, r: int)
+    +equals(o: Object): boolean
+    +hashCode(): int
+  }
+
+  class Tile {
+    +Tile(c: Color)
+  }
+
+  enum GameMode {
+    ENDLESS
+    LEVELS
+  }
+
+  class AnimTile {
+    +tile: Tile
+    +AnimTile(t: Tile, s: Point, e: Point, i: int)
+  }
+
+  class FloatingText {
+    +text: String
+    +FloatingText(t: String, x: int, y: int, c: Color)
+    +update(): boolean
+    +draw(g2: Graphics2D): void
+  }
+}
+
+package "test" {
+  class GameManagerTest
+  class TileFactoryTest
+  class HexTest
+  class ScoringStrategyTest
+}
+
+HexaSortGame *-- GameFacade
+HexaSortGame *-- GamePanel
+HexaSortGame *-- MenuPanel
+
+MenuPanel ..> HexaSortGame
+MenuPanel ..> GameFacade
+GamePanel ..> HexaSortGame
+GamePanel ..> GameManager
+GamePanel ..> AnimTile
+GamePanel ..> FloatingText
+
+GamePanel ..|> GameObserver
+GameManager "1" o-- "0..*" GameObserver
+GameManager ..> TileFactory
+GameManager ..> ScoringStrategy
+GameManager ..> Hex
+GameManager ..> Tile
+GameManager ..> GameMode
+
+TileFactory ..> Tile
+
+StandardScoring ..|> ScoringStrategy
+ComboScoring ..|> ScoringStrategy
+
+GameManagerTest ..> GameManager
+TileFactoryTest ..> TileFactory
+HexTest ..> Hex
+ScoringStrategyTest ..> ScoringStrategy
+ScoringStrategyTest ..> StandardScoring
+ScoringStrategyTest ..> ComboScoring
+
+@enduml
